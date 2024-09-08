@@ -3,8 +3,8 @@ Project Title: Moral Uncertainty Model
 This repo contains files describing the data processing and analysis for the Moral Uncertainty Model Project
 
 Links:
-- Moral Uncertainty Model blog post
-- Original dataset: World Value Survey Dataset 7 
+- Moral Uncertainty Model [blog post](URL)
+- Original dataset: [World Value Survey Dataset 7](https://www.worldvaluessurvey.org/WVSDocumentationWV7.jsp)
 
 
 The R studio notebook attached (MoralUncertainty.Rmd) contains
