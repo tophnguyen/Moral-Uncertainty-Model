@@ -5,7 +5,7 @@ This repo contains files describing the data processing and analysis for the Mor
 Links:
 - Moral Uncertainty Model blog post
 
-- The R studio notebook attached (ccai_data_processing.ipynb)
+- The R studio notebook attached (MoralUncertainty.Rmd)
 
 - Processed dataset: moral_compass_final.csv 
 
