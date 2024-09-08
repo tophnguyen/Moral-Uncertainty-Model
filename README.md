@@ -4,9 +4,13 @@ This repo contains files describing the data processing and analysis for the Mor
 
 Links:
 Moral Uncertainty Model blog post
+
 The R studio notebook attached (ccai_data_processing.ipynb)
+
 Processed dataset: moral_compass_final.csv 
+
 Original dataset: World Value Survey Dataset 7 
+
 World Value Survey Codebook 
 
 Notes: 
