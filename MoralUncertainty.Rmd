@@ -1,0 +1,800 @@
+---
+title: "Predicting Moral Uncertainty in America"
+author: "Christopher Nguyen"
+date: "2024-08-15"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r}
+library(rstatix) #Allows you to do various statistical tests
+library(haven) #Allows you to import wide variety of data types
+library(tidyverse) #General coding
+library(descr) #Easy frequencies and distributions of discrete variables 
+library(ggplot2) #Graphing 
+library(skimr) #Easy descriptive data of all variables in dataset
+library(dplyr)
+library(stargazer)
+library(psych)
+library(corrplot)
+library(ggeffects)
+```
+
+Research Question: Why is there moral uncertainty in America?
+
+Hypothesis 1: Positive attitudes on technology vs. moral uncertainty
+
+One-sided hypothesis test 
+Ho: As positive views on technology increases, moral uncertainty does not increase
+Ha: As positive views on technology increases, moral uncertainty increases
+
+Two-sided hypothesis test
+Ho: There is no linear relationship between positive views on technology and moral uncertainty
+Ha: There is a linear relationship between positive views on technology and moral uncertainty
+
+Hypothesis 2: Trust in government vs. moral uncertainty
+
+One-sided hypothesis test 
+Ho: As confidence in government increases, moral uncertainty does not decrease
+Ha: As confidence in government increases, moral uncertainty decreases
+
+Two-sided hypothesis test
+Ho: There is no linear relationship between confidence in parliament and moral uncertainty
+Ha: There is a linear relationship between confidence in parliament and moral uncertainty
+
+Hypothesis 3: Interpersonal trust vs. moral uncertainty
+
+One-sided hypothesis test 
+Ho: As  interpersonal trust (outgroup) increases, moral uncertainty does not decrease
+Ha: As  interpersonal trust (outgroup) increases, moral uncertainty decreases
+
+Two-sided hypothesis test
+Ho: There is no linear relationship between interpersonal trust (outgroup) and moral uncertainty
+Ha: There is a linear relationship between interpersonal trust (outgroup) and moral uncertainty
+
+Additionally, I have control variables education, religion, social media usage, age, and U.S region. 
+
+Dependent variable:
+Q176: Degree of agreement: Nowadays one often has trouble deciding which moral rules are the right ones to follow
+
+views on technology composite score:
+Q158: Science and technology are making our lives healthier, easier, and more comfortable
+Q159: Because of science and technology, there will be more opportunities for the next generation
+Q163: The world is better off, or worse off, because of science and technology
+
+Trust in government:
+Q71: Confidence: The Government
+
+Interpersonal trust composite score to represent outgroup trust:
+Q61: Trust: People you meet for the first time
+Q63: Trust: People of a different nationality
+Q63: Trust: People of a different religion
+
+Control variables:
+Q262: Age - numeric variable
+Q275: Education level 
+Q207: Information source: Social media (Facebook, Twitter, etc.)
+Q171: How often do you attend religious services
+N_Region_ISO: Region code by U.S States
+
+Other variables taken into consideration but not used:
+Q72: Confidence: The Political Parties
+Q73: Confidence: Parliament
+Q60: Trust: Your family
+Q59: Trust: Your neighborhood
+Q60: Trust: People you know personally
+
+
+```{r}
+setwd("/Users/christoph/Desktop/DACSS 603")
+
+wvs <- read.csv("WVS.csv")
+``` 
+
+```{r}
+moral <- select(wvs, "A_YEAR", "B_COUNTRY", "N_REGION_ISO", "Q176", "Q158", "Q159", "Q163", "Q71", "Q72", "Q73", "Q59", "Q60", "Q61", "Q262", "Q275", "Q207", "Q171", "Q63", "Q58", "Q62", "Q161") %>%
+  filter(B_COUNTRY == 840) %>%
+  filter(Q176 != -1 & Q176 != -2,
+         Q158 != -1 & Q158 != -2,
+         Q159 != -1 & Q159 != -2,
+         Q163 != -1 & Q163 != -2,
+         Q71 != -1 & Q71 != -2,
+         Q72 != -1 & Q72 != -2,
+         Q73 != -1 & Q73 != -2,
+         Q59 != -1 & Q59 != -2,
+         Q60 != -1 & Q60 != -2,
+         Q61 != -1 & Q61 != -2,
+         Q262 != -1 & Q262 != -2,
+         Q275 != -1 & Q275 != -2,
+         Q207 != -1 & Q207 != -2, 
+         Q171 != -1 & Q171 != -2,
+         Q63 != -1 & Q63 != -2,
+         Q58 != -1 & Q58 != -2,
+         Q62 != -1 & Q62 != -2,
+         Q161 != -1 & Q161 != -2) %>%
+  mutate(regions = case_when( #transform state codes to regions
+    N_REGION_ISO == 840007 ~ "Northeast",
+    N_REGION_ISO == 840019 ~ "Northeast",
+    N_REGION_ISO == 840021 ~ "Northeast",
+    N_REGION_ISO == 840029 ~ "Northeast",
+    N_REGION_ISO == 840007 ~ "Northeast",
+    N_REGION_ISO == 840030 ~ "Northeast",
+    N_REGION_ISO == 840032 ~ "Northeast",
+    N_REGION_ISO == 840038 ~ "Northeast",
+    N_REGION_ISO == 840039 ~ "Northeast",
+    N_REGION_ISO == 840045 ~ "Northeast",
+    N_REGION_ISO == 840013 ~ "Midwest",
+    N_REGION_ISO == 840014 ~ "Midwest",
+    N_REGION_ISO == 840015 ~ "Midwest",
+    N_REGION_ISO == 840016 ~ "Midwest",
+    N_REGION_ISO == 840022 ~ "Midwest",
+    N_REGION_ISO == 840023 ~ "Midwest",
+    N_REGION_ISO == 840025 ~ "Midwest",
+    N_REGION_ISO == 840027 ~ "Midwest",
+    N_REGION_ISO == 840034 ~ "Midwest",
+    N_REGION_ISO == 840035 ~ "Midwest",
+    N_REGION_ISO == 840041 ~ "Midwest",
+    N_REGION_ISO == 840049 ~ "Midwest",
+    N_REGION_ISO == 840001 ~ "South",
+    N_REGION_ISO == 840004 ~ "South",
+    N_REGION_ISO == 840008 ~ "South",
+    N_REGION_ISO == 840009 ~ "South",
+    N_REGION_ISO == 840010 ~ "South",
+    N_REGION_ISO == 840017 ~ "South",
+    N_REGION_ISO == 840018 ~ "South",
+    N_REGION_ISO == 840020 ~ "South",
+    N_REGION_ISO == 840024 ~ "South",
+    N_REGION_ISO == 840033 ~ "South",
+    N_REGION_ISO == 840036 ~ "South",
+    N_REGION_ISO == 840040 ~ "South",
+    N_REGION_ISO == 840042 ~ "South",
+    N_REGION_ISO == 840043 ~ "South",
+    N_REGION_ISO == 840046 ~ "South",
+    N_REGION_ISO == 840048 ~ "South",
+    N_REGION_ISO == 840003 ~ "West",
+    N_REGION_ISO == 840005 ~ "West",
+    N_REGION_ISO == 840006 ~ "West",
+    N_REGION_ISO == 840011 ~ "West",
+    N_REGION_ISO == 840012 ~ "West",
+    N_REGION_ISO == 840026 ~ "West",
+    N_REGION_ISO == 840028 ~ "West",
+    N_REGION_ISO == 840031 ~ "West",
+    N_REGION_ISO == 840037 ~ "West",
+    N_REGION_ISO == 840044 ~ "West",
+    N_REGION_ISO == 840047 ~ "West",
+    N_REGION_ISO == 840050 ~ "West")
+    ) %>%
+  drop_na()
+
+moral$regions <- factor(moral$regions) #make regions into categorical
+head(moral)
+
+```
+
+
+#cronhbachs composite score
+
+Creating composite scores for views on technology, trust in government, and interpersonal trust and add into a single table
+
+```{r}
+
+moral_comp <- data.frame(moral$Q158, moral$Q159, moral$Q163, moral$Q71, moral$Q72, moral$Q73, moral$Q59, moral$Q60, moral$Q61, moral$Q63, moral$Q58, moral$Q62, moral$Q161)
+
+new_names <- c("tt1", "tt2", "tt3", "tg1", "tg2", "tg3", "ti1", "ti2", "ti3", "ti4", "ti5", "ti6", "tt4")#Give variables more informative names 
+head(moral_comp)
+```
+
+```{r}
+
+#Working out of the original data frame, moral, so I can save the new variable there for analysis purposes. In this block I have the new variables that are recoded from low to high and also renamed the DV and control variables for readability
+
+moral_comp <- moral %>% #This creates new variable 
+  mutate(tt1 = case_when(
+    Q158 ==1 ~ 1, 
+    Q158 ==2 ~ 2,
+    Q158 ==3 ~ 3,
+    Q158 ==4 ~ 4,
+    Q158 ==5 ~ 5,
+    Q158 ==6 ~ 6,
+    Q158 ==7 ~ 7,
+    Q158 ==8 ~ 8,
+    Q158 ==9 ~ 9,
+    Q158 ==10 ~ 10
+  ),
+  tt2 = case_when( 
+    Q159 ==1 ~ 1, 
+    Q159 ==2 ~ 2,
+    Q159 ==3 ~ 3,
+    Q159 ==4 ~ 4,
+    Q159 ==5 ~ 5,
+    Q159 ==6 ~ 6,
+    Q159 ==7 ~ 7,
+    Q159 ==8 ~ 8,
+    Q159 ==9 ~ 9,
+    Q159 ==10 ~ 10
+  ),
+  tt3 = case_when(
+    Q163 ==1 ~ 1, 
+    Q163 ==2 ~ 2,
+    Q163 ==3 ~ 3,
+    Q163 ==4 ~ 4,
+    Q163 ==5 ~ 5,
+    Q163 ==6 ~ 6,
+    Q163 ==7 ~ 7,
+    Q163 ==8 ~ 8,
+    Q163 ==9 ~ 9,
+    Q163 ==10 ~ 10
+  ),
+  tt4 = case_when( #reverse code so it goes from low to high
+    Q161 ==1 ~ 10, 
+    Q161 ==2 ~ 9,
+    Q161 ==3 ~ 8,
+    Q161 ==4 ~ 7,
+    Q161 ==5 ~ 6,
+    Q161 ==6 ~ 5,
+    Q161 ==7 ~ 4,
+    Q161 ==8 ~ 3,
+    Q161 ==9 ~ 2,
+    Q161 ==10 ~ 1
+  ),
+  tg1 = case_when( #reverse code so it goes from low to high
+    Q71 ==1 ~ 4,
+    Q71 ==2 ~ 3,
+    Q71 ==3 ~ 2,
+    Q71 ==4 ~ 1
+  ),
+  tg2 = case_when( #reverse code so it goes from low to high
+    Q72 ==1 ~ 4,
+    Q72 ==2 ~ 3,
+    Q72 ==3 ~ 2,
+    Q72 ==4 ~ 1
+  ),
+  tg3 = case_when( #reverse code so it goes from low to high
+    Q73 ==1 ~ 4,
+    Q73 ==2 ~ 3,
+    Q73 ==3 ~ 2,
+    Q73 ==4 ~ 1
+  ),
+  ti1 = case_when( #I‘d like to ask you how much you trust people from various groups. Could you tell me for each whether you trust people from this group completely, somewhat, not very much or not at all? 1 = Trust completely and 10 - Do not trust at all
+    Q59 ==1 ~ 4, #reverse code so it goes from low to high
+    Q59 ==2 ~ 3, 
+    Q59 ==3 ~ 2, 
+    Q59 ==4 ~ 1 
+  ),
+ti2 = case_when( #reverse code so it goes from low to high
+    Q60 ==1 ~ 4,
+    Q60 ==2 ~ 3,
+    Q60 ==3 ~ 2,
+    Q60 ==4 ~ 1
+  ),
+ti3 = case_when( #reverse code so it goes from low to high
+    Q61 ==1 ~ 4,
+    Q61 ==2 ~ 3,
+    Q61 ==3 ~ 2,
+    Q61 ==4 ~ 1
+  ),
+ti4 = case_when( #reverse code so it goes from low to high
+    Q63 ==1 ~ 4,
+    Q63 ==2 ~ 3,
+    Q63 ==3 ~ 2,
+    Q63 ==4 ~ 1
+),
+ti5 = case_when( #reverse code so it goes from low to high
+    Q58 ==1 ~ 4,
+    Q58 ==2 ~ 3,
+    Q58 ==3 ~ 2,
+    Q58 ==4 ~ 1
+  ),
+ti6 = case_when( #reverse code so it goes from low to high
+    Q62 ==1 ~ 4, 
+    Q62 ==2 ~ 3,
+    Q62 ==3 ~ 2,
+    Q62 ==4 ~ 1),
+#rename and reverse code DV
+Moral_uncertainty = case_when( #How much do you agree or disagree with the statement that nowadays one often has trouble deciding which moral rules are the right ones to follow? 1 = completely agree and 10 - completely disagree
+    Q176 ==1 ~ 10, #reverse code moral uncertainty to go from low moral uncertainty to high moral uncertainty 
+    Q176 ==2 ~ 9,
+    Q176 ==3 ~ 8,
+    Q176 ==4 ~ 7, 
+    Q176 ==5 ~ 6,
+    Q176 ==6 ~ 5,
+    Q176 ==7 ~ 4,
+    Q176 ==8 ~ 3,
+    Q176 ==9 ~ 2,
+    Q176 ==10 ~ 1,
+),
+    Age = Q262, #transform other control variables into readable information 
+    Education = Q275,
+    Social_media_usage = Q207,
+    Religious_service = Q171)
+
+head(moral_comp)
+```
+
+```{r}
+
+#create corrplot for variables to determine which variables are correlated with each other. This will help me visualize which variables are correlated with each other
+df <- moral_comp %>%
+  dplyr::select(tt1, tt2, tt3, tt4, tg1, tg2, tg3, ti1, ti2, ti3, ti4, ti5, ti6) 
+
+# Calculate the correlation matrix
+cor_matrix <- cor(df, use = "complete.obs") #Note "complete.obs" removes any case with a NA value  
+
+# View the correlation matrix
+print(cor_matrix)
+
+# Graph the results
+corrplot(cor_matrix, method = "color")
+
+#brief chain of thought on selecting IVs for composite score, more information and details within the IV section explanation. #based on the corrplot matrix, I will take out tt4 from the positive tech composite score as it has a low correlation and slighly measures a different construct. I will also remove ti1, ti2, and ti5 from the inter_trust composite score since they are seen to represent ingroup trust rather than outgroup trust. I can also see tg2 and tg3 are highly correlated but not with tg1. A plausible reason for this is that tg1 confidence in government can be seen to be a single group while parliament and political party can be seen as multiple groups that are tied to different groups (democratic, republican etc.) For this reason, I will only use tg1 confidence in government as my IV for confidence in government to minimize ambiguity. 
+
+```
+
+```{r}
+#With the new variables selected, coded in same direction, and renamed I create the new scales using 'moral_comp'
+moral_comp <- moral_comp %>%
+  mutate(
+    Positive_tech = (tt1 + tt2 + tt3) / 3,
+    Confidence_government = tg1,
+    Inter_trust = (ti3 + ti4 + ti6) / 3, #Outgroup - trust people you meet for the first time, people of another religion, and people of another nationality
+    )
+
+#Add across individual items and divide by the total number of items. Note this uses casewise deletion so any case that did not answer each question is removed from the calculation 
+
+summary(moral_comp$Positive_tech) #Examine the views on tech summary statistics
+moral_comp %>% 
+  count(Positive_tech)
+
+summary(moral_comp$Confidence_government) #Examine the confidence in government summary statistics
+moral_comp %>% 
+  count(Confidence_government)
+
+summary(moral_comp$inter_trust) #Examine interpersonal trust summary statistics
+moral_comp %>% 
+  count(moral_comp$inter_trust)
+
+#corplot for views on tech
+df_tech <- moral_comp %>%
+  dplyr::select(tt1, tt2, tt3, Positive_tech) #removed tt4
+
+# Calculate the correlation matrix
+cor_matrix_tech <- cor(df_tech, use = "complete.obs") #Note "complete.obs" removes any case with a NA value  
+
+# View the correlation matrix
+print(cor_matrix_tech)
+
+# Graph the results
+corrplot(cor_matrix_tech, method = "color")
+
+#corplot for interpersonal trust
+df_inter <- moral_comp %>%
+  dplyr::select(ti3, ti4, ti6, Inter_trust) #removed ti5
+
+# Calculate the correlation matrix
+cor_matrix_inter <- cor(df_inter, use = "complete.obs") #Note "complete.obs" removes any case with a NA value  
+
+# View the correlation matrix
+print(cor_matrix_inter)
+
+# Graph the results
+corrplot(cor_matrix_inter, method = "color")
+
+```
+
+```{r}
+
+#run alpha on positive_tech
+moral_comp_tech <- moral_comp %>%
+  select(tt1, tt2, tt3) 
+
+psych::alpha(moral_comp_tech, na.rm = TRUE, check.keys=TRUE) #Run the alpha calculation
+#raw alpha is .78 for positive views on technology
+
+#run alpha on inter_trust
+moral_comp_inter <- moral_comp %>%
+  select(ti3, ti4, ti6) #removed ti1, ti2, and ti5 to represent out-group interpersonal trust
+
+psych::alpha(moral_comp_inter, na.rm = TRUE, check.keys=TRUE) #Run the alpha calculation
+#raw alpha is .79 for inter_trust
+```
+
+```{r}
+#review descriptive statistics 
+summary(moral_comp)
+
+class(moral_comp$Moral_uncertainty)
+```
+
+```{r}
+#Review the DV distribution and decide if you need to transform it in some way
+#Using a bar plot to visualize "moral uncertainty" when specifying it as a categorical ordinal variable.
+
+#create bar plot of Moral_uncertainty reversed coded version
+ggplot(moral_comp, aes(x = as.factor(Moral_uncertainty))) + #reversed
+  geom_bar(fill="slateblue", color="blue", alpha=0.2) +
+  labs(title = "Histogram Plot of Moral Uncertainty in America",
+       x = "Moral Uncertainty",
+       y = "Count") +
+  scale_x_discrete(labels=c("1" = "Completely disagree (low)", "10" = "Completely agree (high)")) + theme_minimal() +
+  theme(axis.text.x = element_text(angle=70, hjust=1))
+
+#The DV distribution is not right-hand skewed and ordinal so I do not transform it. I will use the "Moral_uncertainty" variable throughout the report as its recoded from low to high moral uncertainty. 
+
+summary(moral_comp$Moral_uncertainty)
+summary(moral_comp$Q176)
+```
+
+#The DV Moral Uncertainty is defined as the Degree of agreement in which one often has trouble deciding which moral rules are the right ones to follow (wvs). 
+
+#The decision to only use a single question was to keep the DV focused on a single construct and to reduce complexity. Moreover, the DV was reversed coded. The original scale was "How much do you agree or disagree with the statement that nowadays one often has trouble deciding which moral rules are the right ones to follow? 1 = completely agree and 10 - completely disagree". I reversed it where a 1 is low moral uncertainty and 10 is high moral uncertainty for consistency reasons. 
+
+Independent Variables discussion
+Review the IV distributions and decide if you need to transform it in some way
+Should describe each independent variable in your model AND
+Why it should be considered a causal predictor of the DV OR
+Why it should be included as a control variable in your model
+
+```{r}
+#Review the DV distribution and decide if you need to transform it in some way
+
+#plot trust_tech as continuous since I created a composite score
+ggplot(moral_comp, aes(x = Positive_tech)) +
+  geom_histogram(aes(y = after_stat(density)), position = "identity", bins = 10, fill = "slateblue", alpha = 0.2, color="blue") +
+  labs(title = "Histogram  Plot of Trust in Technology in America",
+       x = "Posititive views on technology",
+       y = "Density") +
+  theme_minimal() 
+
+#The views on technology distribution is not right-hand skewed so I don't transform it. Based on the descriptive stats mean = 7.34, which aligns with the graph indicating Americans generally have positive views on technology. 
+
+#plot confidence in government as ordinal since its a single likert scale measure
+ggplot(moral_comp, aes(x = as.factor(tg1))) +
+  geom_bar(fill="slateblue", color="blue", alpha=0.2) +
+  labs(title = "Bar Plot of confidence in government in America",
+       x = "Confidence in Government",
+       y = "Count") +
+  scale_x_discrete(labels=c("1" = "None at all", "2" = "Do not trust very much", "3" = "Trust somewhat", "4" = "Trust completely")) +
+  theme_minimal()
+
+#The confidence in government distribution is slightly right-hand skewed, but ordinal so I don't transform it. Based on the descriptive stats, confidence in government mean = 2.07 which is about "do not trust very much".  
+
+
+#plot inter_trust as continuous since I created a composite score
+ggplot(moral_comp, aes(x = Inter_trust)) +
+  geom_histogram(aes(y = after_stat(density)), position = "identity", bins = 8, fill = "slateblue", alpha = 0.2, color="blue") +
+  labs(title = "Histogram Plot of trust in others (Out-group)",
+       x = "Interpersonal trust (Outgroup trust)",
+       y = "Density") + 
+  theme_minimal()
+
+#Interpersonal trust distribution is slightly positive skewed, so I don't transform it. Also data is still somewhat considered ordinal. Based on the descriptive stats, intertrust mean = 2.55 which is between "do not trust very much" to "trust somewhat". 
+
+#graph control variable distributions 
+##Using a histogram and density plot to visualize "age" when specifying it as a continuous numeric variable.
+ggplot(moral_comp, aes(x = Age)) + #wvs eligible age is 18-85 years old
+  geom_histogram(aes(y = after_stat(density)), position = "identity", bins = 10, fill = "slateblue", alpha = 0.2, color="blue") +
+  labs(title = "Histogram Plot of Age",
+       x = "Age",
+       y = "Density") +
+  theme_minimal()
+
+#I would not log transform age. Also age is a control variable and the data is not highly right-hand skewed. 
+#I did want to see if log transforming age made a difference so I did run a lin_Log on age and it did not change the results. For these reasons, log transforming age was not used.  
+
+#Using a barplot to visualize "education level" when specifying it as a categorical ordinal variable.
+ggplot(moral_comp, aes(x = as.factor(Education))) +
+  geom_bar(fill="slateblue", color="blue", alpha=0.2) +
+  labs(title = "Bar Plot of Education",
+       x = "Education Level",
+       y = "Count") +
+  scale_x_discrete(labels=c("0" = "Early childhood edu", "1" = "Primary", "2" = "LoIr secondary", "3" = "Upper secondary", "4" = "Post-secondary", "5" = "Short-cycle tertiary", "6"="Bachelors", "7"="Masters", "8" = "Doctoral")) +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle=70, hjust=1))
+
+#Using a bar plot to visualize "social media usage" when specifying it as a categorical ordinal variable.
+ggplot(moral_comp, aes(x = as.factor(Social_media_usage))) +
+  geom_bar(fill="slateblue", color="blue", alpha=0.2) +
+  labs(title = "Bar Plot of Social Media Usage",
+       x = "Social Media Usage",
+       y = "Count") +
+  scale_x_discrete(labels=c("1" = "Daily", "2" = "Weekly", "3" = "Monthly", "4" = "Less than monthly", 
+                            "5" = "Never")) + theme_minimal()
+
+#Using a bar plot to visualize "religious service attendance" when specifying it as a categorical ordinal variable.
+ggplot(moral_comp, aes(x = as.factor(Religious_service))) +
+  geom_bar(fill="slateblue", color="blue", alpha=0.2) +
+  labs(title = "Bar Plot of Religious Service Attendence",
+       x = "Religious Service Attendence",
+       y = "Count") +
+  scale_x_discrete(labels=c("1" = "More than once a week", "2" = "Once a week", "3" = "Once a month", "4" = "Only on special holy days", "5" = "Once a year", "6" = "Less often", "7" = "Never, practically never")) + theme_minimal() + 
+  theme(axis.text.x = element_text(angle=70, hjust=1))
+
+#Using a bar plot to visualize "religious service attendance" when specifying it as a categorical variable.
+ggplot(moral_comp, aes(x = regions)) +
+  geom_bar(fill = "slateblue", alpha=0.2, color = "blue") +
+  labs(title = "Bar Plot of U.S Regions",
+       x = "Regions",
+       y = "Count") +
+  theme_minimal()
+
+#control variables are ordinal so I do not log transform them. 
+```
+
+Should describe each independent variable in your model AND Why it should be considered a causal predictor of the DV.
+
+Primary IVs: 
+
+Positive views on technology: 
+
+Views on technology is a composite score consisting of 3 questions:
+1. Science and technology are making my lives healthier, easier, and more comfortable
+2. Because of science and technology, there will be more opportunities for the next generation
+3. The world is better off, or worse off, because of science and technology 
+
+The positive views on technology scale is a composite score of attitudes on science and technology's impact on society. There was one question that referred to whether the progress of science goes against moral values. Though adding this question into the composite score increased the R square by 1%, it was slightly measuring a different construct than the other three questions. Adding the question to the composite score decreased the score from .78 to .73 cronbach alpha. All scales were on a 10-point likert scale going in the same direction. 
+
+Confidence in government:
+
+Confidence in government is a single questions represented by:
+1. Confidence in the Government (in your nation’s capital)
+
+The confidence in government started as a composite score of three questions that measured confidence in government overall, consisting of confidence in parliament, political parties, and government. However, respondent interpretation of these question can vary, particularly with political party and parliament. It is unclear whether the respondent is referring to one party or all parties when answering the political and parliament question. While parliament can be seen more as a single group, it still represents multiple groups. The corrplot also revealed that parliament and political were highly correlated, indicating that they may be slightly different than confidence in government, though still somewhat similar. To avoid ambiguity, this analysis only uses the single question of confidence in government rather than the 3 question composite score.  
+
+Interpersonal trust (outgroup trust):
+
+Interpersonal trust is a composite score consisting of 3 questions representing out-group trust
+1. Trust in people you meet for the first time
+2. People of another religion
+3. People of another nationality 
+
+While ingroup trust is:
+1. Trust in family
+2. Trust in someone you know personally
+3. Trust in neighbor 
+
+Within Deljey study, they discovered "outgroup-trust varies greatly and is only--yet not always--high when ingroup-trust is high" ((Delhey and Ilzel 2012). This suggests that when ingroup trust is high, most of the time outgroup is also high. This relays back to when I combined in-group and out-group questions together into a composite score and the Cronbach alpha was .80 compared to the outgroup composite score of .79. To simplify the analysis, I only use the outgroup composite score as outgroup trust seems to be an area that is still under explored and more varied than ingroup trust. All scores are on a 4-point likert scale in the same direction. 
+
+Delhey, J. & C. Ilzel (2012). “Generalizing Trust: How Outgroup-Trust Grows Beyond Ingroup-Trust.” World Values Research 5(3): 46-69.
+
+Control variables:
+
+N_Region_ISO: Region code by U.S States: Research focuses on a single country (United States) and uses regions as a variable to assess moral uncertainty across the U.S regions (Midwest, Northeast, West, and South). 
+
+Q262: Age - numeric variable. Age was chosen as a control variable because different age groups may be more inclined to have moral uncertainty. For example, younger Americans may be morally uncertain compared to older adults who may already have established moral values or vice versa. 
+
+Q275: Education level was chosen as a control variable because individuals who attend college may learn different values from their University depending on their location. 
+
+Q207: Information source: Social media (Facebook, Twitter, etc.) - Useful because social media is how American's retrieve new information about the world which has the potential to alter my moral values. Based on the distribution, I can see that most Americans use social media daily. Social media such as Facebook and Twitter tend to be politically chaotic, introducing people to polarizing perspectives on social issues.   
+
+Q171: How often do you attend religious services: Religion was chosen as a control variable because it is a core value in many people's lives. Religion serves as a guide to making ethical decisions. This variable addresses religious leader influence based on an individuals church attendance. Just as government institutions can influence Americans, so can religious leaders such as priest. 
+
+Fully interpret the results of your regression including… If you reject or fail to reject your hypotheses What do the beta weights tell you about the relationship between your IVs and DV Overall model fit and what that tells us about the model
+
+```{r}
+
+#create lm for trust in tech with control variables 
+lm1 <- lm(Moral_uncertainty ~ Positive_tech + Age + Education + Social_media_usage + Religious_service + regions, data = moral_comp)
+
+#create lm for trust in gov with control variables 
+lm2 <- lm(Moral_uncertainty ~ Confidence_government + Age + Education + Social_media_usage + Religious_service + regions, data = moral_comp)
+
+#create lm for trust in interpersonal trust with control variables 
+lm3 <- lm(Moral_uncertainty ~ Inter_trust + Age + Education + Social_media_usage + Religious_service + regions, data = moral_comp)
+
+#combined variables:
+lm4 <- lm(Moral_uncertainty ~ Positive_tech + Confidence_government + Inter_trust + Age + Education + Social_media_usage + Religious_service + regions, data = moral_comp)
+
+stargazer (lm1, lm2, lm3, lm4, digits = 3, type = "text")
+
+#clean up table - watch 8.1 lecture using stargazer
+
+stargazer(lm4, digits=3, type="text",  single.row = TRUE)
+stargazer(lm4, digits=3, type="text", dep.var.labels=c("Moral Uncertainty in the United States"),
+          covariate.labels=c("Positive views on technology", "Confidence in government", "Interpersonal trust (Outgroup)", "Age", "Education Level", "Social Media Usage", "Religious Service Attendence", "U.S Region"),  single.row = TRUE)
+```
+ 
+
+The multiple linear regression (lm4) is the best model that predicts 0.08 of the variance in moral uncertainty indicated by R square. The variables that are significantly related to the DV (moral uncertainty) are Positive views on technology, Interpersonal trust (Outgroup), Age, Education, and social media usage. We know this by the stars next to the coefficients. When looking at the multiple linear regression (lm4), positive views on technology, interpersonal trust (outgroup), Age, Education, and social media usage have a negative relationship with moral uncertainty. This direction is indicated by the the presence of a minus sign next to the coefficients. For the main IVs, there is a -0.241 change per 1 unit increase in positive views in technology and a -.336 change per 1 unit increase in interpersonal trust (outgroup) on moral uncertainty. 
+
+
+Hypothesis 1: Positive views on technology vs. moral uncertainty
+
+Two-sided hypothesis test
+We reject the null hypothesis, there is evidence to suggest a relationship between positive views on technology and moral uncertainty 
+There is a -0.241 change per 1 unit increase in positive views in technology - indicating a negative relationship. 
+
+Based on my 1 sided hypothesis, I expected a positive relationship between positive views on technology and moral uncertainty. These result actually indicate that positive views on technology decreases moral uncertainty. 
+
+Hypothesis 2: Trust in government vs. moral uncertainty
+
+Two-sided hypothesis test
+Fail to reject the null hypothesis, there is no evidence to suggest a relationship between confidence in government and moral uncertainty. 
+
+Hypothesis 3: Interpersonal trust (outgroup) vs. moral uncertainty
+
+Two-sided hypothesis test
+Reject the null hypothesis: There is some evidence to suggest a relationship between interpersonal trust (outgroup) and moral uncertainty. 
+There is a -.336 change per 1 unit increase in interpersonal trust (outer-group) on moral uncertainty - indicating a negative relationship. These results align with my 1 sided hypothesis in that as interpersonal trust (outgroup) increases, moral uncertainty decreases. 
+
+The multiple regression model lm4 predicted 8% of the variance in moral uncertainty with an (R Square = .08, Adjusted R Square = .076, F = 20.751, n = 2401, p < .01). Out of all models, lm4 had the highest R square and Adjusted R square. 
+
+Assumption Diagnostics With your primary linear model, conduct a full assumption diagnostic of the results. Draw conclusions on if any were violated and if so, what your solutions would be. Apply robust standard errors and remove outliers from your model if necessary (if they are necessary, you should show both the original model and the “fixed” model
+
+
+```{r}
+
+#Testing assumptions and diagnostics
+
+#check for multicollinearity 
+library(car)
+vif(lm4)
+#there is no multicollinearity between independent variables as no values are greater than 3
+
+library(lmtest)
+#Breusch-Pagan Test in R
+bp_test <- bptest(lm4)
+bp_test
+
+#I reject the null with a p-value < 2.2e-16, model violates heteroskedascity assumption
+
+#check for non-linear relationship
+plot(lm4, which=2)
+
+#I do have non-linear relationship 
+
+#Shapiro-Wilk’s Test for Normality
+residuals <- residuals(lm4)
+shapiro_test <- shapiro.test(residuals)
+shapiro_test
+
+#based on shapiro test, I reject the null hypothesis and say that lm4 violates normality of residuals assumptions. 
+
+library(sandwich)
+#conduct a robustness check to see which variables are causing issues
+#new_name<-coeftest(model_name, vcov =
+#vcovHC(model_name, type="hc#"))
+
+robust1<-coeftest(lm4, vcov =
+vcovHC(lm4, type="HC1"))
+
+robust3<-coeftest(lm4, vcov =
+vcovHC(lm4, type="HC3"))
+stargazer(lm4, robust1, robust3, type="text")
+
+#based on the robustness check, my model has been adjusted and shows standard error sizes to be similar and significance to be the same and is still robust even with heterodescascity and violations of normality. 
+```
+
+Since my survey data is ordinal, I'll also run a logistic regression and compare results with my OLS regression. Here I'll compare directionality and significance level. 
+
+```{r}
+library(MASS)
+#create logistic regression for model lm4
+moral_comp$Moral_uncertainty <- factor(moral_comp$Moral_uncertainty, ordered = TRUE) #Setting DV = ordered for analysis
+
+moral_comp$regions <- factor(moral_comp$regions, ordered = TRUE) #Setting DV = ordered for analysis
+
+dp_l<-polr(Moral_uncertainty ~ Positive_tech + Confidence_government + Inter_trust + Age + Education + Social_media_usage + Religious_service + regions, data=moral_comp, na.action = na.exclude, method = "logistic") 
+
+dp_p<-polr(Moral_uncertainty ~ Positive_tech + Confidence_government + Inter_trust + Age + Education + Social_media_usage + Religious_service + regions, data=moral_comp, na.action = na.exclude, method = "probit" ) 
+
+summary(dp_p)
+
+library(stargazer)
+stargazer(dp_l, dp_p, type="text", digits=3) #Display regression results
+
+#based on the ordered logistic regression, positive views on technology and interpersonal trust are still significant and have the same directionality as in the OLS regression. 
+
+library(brant)
+brant(dp_l) #Test parallel regressions assumption
+brant(dp_p) #Test parallel regressions assumption
+
+#paralle regression is violated for lm4
+```
+
+Graphing Predicted Value Results  
+For your final model, include a predicted value plot for all of your hypotheses for which you “reject” the null hypothesis
+Ensure you provide a cleaned up version of the graph(s) which includes appropriately labeled titles, axes and any necessary legend that describes to your readers what is being presented in the graph
+
+```{r}
+
+#graph positive views on technology and moral uncertainty
+tech_region<-ggpredict(lm4, terms=c("Positive_tech [1:10, by=1]"))
+footnote_tech <- str_wrap("Note: Views on technological impact in regards to long term benefits to humanity in health, comfort, ease of life, and opportunites for future generations", width = 70)
+
+#bar chart
+ggplot(tech_region, aes(x = factor(x, levels = 1:10), y = predicted)) +
+  geom_col(position = position_dodge(width = 0.9), fill="slateblue", color="blue", alpha=0.8) +
+  labs(title = "Bar Chart by Response Level", subtitle= footnote_tech,
+       x = "Views on Technology",
+       y = "Predicted Probability of Moral uncertainty") +
+  scale_x_discrete(labels = c("1" = "Strong negative views", "10" = "Strong positive views")) +
+  theme_minimal() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high),
+                linewidth = 0.3,
+                width = 0.2, 
+                position = position_dodge(width = 0.9))
+
+#based on the bar chart, as positive views on technology increases, moral uncertainty tends to decrease. 
+
+#bar chart of view on technology and moral uncertainty by education 
+tech_edu<-ggpredict(lm4, terms=c("Positive_tech [1,3,5,7,10]", "Education [2,5,7]", "Social_media_usage [1]"))
+footnote_tech_edu <- str_wrap("Note: Views on technological impact in regards to long term benefits to humanity in health, comfort, ease of life, and opportunites for future generations, Education level is set to 'Secondary', 'BA/BS', and 'Advanced degree', social media set to daily usage", width = 70)
+
+ggplot(tech_edu, aes(x = factor(x, levels = 1:10), 
+                 y = predicted, 
+                 group = as.factor(group), 
+                 fill = as.factor(group))) +
+  geom_bar(stat = "identity", width = 0.7, position = position_dodge()) +
+  scale_fill_manual(name = "Education",
+                    values = c("lightgrey", "darkgrey", "black"),
+                    labels = c("2" = "Secondary", "5" = "BA/BS", "7" = "Advanced degree")) +  # Update legend labels
+  theme_minimal(base_size = 10) +
+  labs(x = "Views on Technology",
+       y = "Predicted Probability of Moral uncertainty", 
+       title = "Bar Chart by Response Level and Group", subtitle= footnote_tech_edu) +
+  scale_x_discrete(labels = c("1" = "Strong negative views", "3" = "Moderate negative views", "5" = "Neither positive or negative", "7" = "Moderate positive views", "10" = "Strong positive views")) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high),
+                linewidth = 0.3,    # Thinner lines
+                width = 0.2, 
+                position = position_dodge(width = 0.7)) + 
+  theme(axis.text.x = element_text(angle=35, hjust=1))
+
+#based on the bar chart, as positive views on technology increases, moral uncertainty tends to decrease. 
+
+#graph interpersonal trust and moral uncertainty
+inter_region<-ggpredict(lm4, terms=c("Inter_trust [1:4, by=1]"))
+
+footnote_text <- str_wrap("Note: Trust in strangers, people of another religion, and nationality", width = 70)
+
+ggplot(inter_region, aes(x = factor(x, levels = 1:4), y = predicted)) +
+  geom_col(position = position_dodge(width = 0.9), fill="slateblue", color="blue", alpha=0.8) +
+  labs(title = "Bar Chart by Response Level", subtitle= footnote_text,
+       x = "Interpersonal Trust (Outgroup)",
+       y = "Predicted Probability of Moral uncertainty") +
+  scale_x_discrete(labels = c("1" = "None at all", "2" = "Do not trust very much", "3" = "Trust somewhat", "4" = "Trust completely")) +
+  theme_minimal() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high),
+                linewidth = 0.3,
+                width = 0.2, 
+                position = position_dodge(width = 0.9))
+
+#bar chart predicting moral uncertainy and interpersonal trust by education
+tech_edu<-ggpredict(lm4, terms=c("Inter_trust [1:4, by=1]", "Education [2,5,7]", "Social_media_usage [1]"))
+footnote_inter_edu <- str_wrap("Note: Trust in strangers, people of another religion, and nationality. Education level is set to 'Secondary', 'BA/BS', and 'Advanced degree, social media usage set to daily", width = 70)
+
+ggplot(tech_edu, aes(x = factor(x, levels = 1:10), 
+                 y = predicted, 
+                 group = as.factor(group), 
+                 fill = as.factor(group))) +
+  geom_bar(stat = "identity", width = 0.7, position = position_dodge()) +
+  scale_fill_manual(name = "Education",
+                    values = c("lightgrey", "darkgrey", "black"),
+                    labels = c("2" = "Secondary", "5" = "BA/BS", "7" = "Advanced Degree")) +  # Update legend labels
+  theme_minimal(base_size = 10) +
+  labs(x = "Interpersonal Trust (Outgroup)",
+       y = "Predicted Probability of Moral uncertainty", 
+       title = "Bar Chart by Response Level and Group", subtitle= footnote_inter_edu) +
+  scale_x_discrete(labels = c("1" = "None at all", "2" = "Do not trust very much", "3" = "Trust somewhat", "4" = "Trust completely")) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high),
+                linewidth = 0.3,    # Thinner lines
+                width = 0.2, 
+                position = position_dodge(width = 0.7)) + 
+  theme(axis.text.x = element_text(angle=20, hjust=1))
+
+#based on the bar chart, as interpersonal trust increases, moral uncertainty tends to slightly decreases. 
+
+```
+Graph Summary: 
+View on technology and moral uncertainty 
+#based on the 1st bar chart, as positive views on technology increases, moral uncertainty tends to decrease. I also created a bar chart illustarating the relationship between views on technology and moral uncertainty by education. I can see there is not much of a difference in moral uncertainty and views on technology across different education levels. If there is a difference, it appears to be minimal.  
+
+Interpersonal trust and moral uncertainty 
+#based on the bar chart, as interpersonal trust (outgroup) increases, moral uncertainty tends to slightly decrease. I also created a bar chart illustrating the relationship between interpersonal trust (outgroup) and moral uncertainty by education. Similar to the views on technology on moral uncertainty, there is not much of a difference in moral uncertainty and interpersonal trust across different education levels. 
+
+
+DISCUSSION:
+
+The lm4 model as a whole accounted for 8% of the variance in moral uncertainty (R square = .08, F = 20.751, df = 10; 2401, p < .01). This indicates that there are many other factors that could predict moral uncertainty completely. The variables chosen tend to be broader in scope so 8% of explainable variance was not a surprise. For my H1: we reject the null hypothesis, there is some evidence to suggest a relationship between views on technology and moral uncertainty. There is -0.241 change per 1 unit increase in positive views in technology on moral uncertainty. This direction goes against my initial expectations which theorized high level of positive views of technology would increase moral uncertainty. H2: We fail to reject the null and say there is no relationship between confidence in government and moral uncertainty. This is to say there is no correlation between government and their influence on American's moral uncertainty. These results may indicate that social contract theory does not hold as an influential framework on morality in the 21st century. H3: We reject the null hypothesis and say there is some evidence to suggest a relationship between interpersonal trust (outgroup trust) and moral uncertainty. There is a -.336 change per 1 unit increase in interpersonal trust on moral uncertainty. These findings aligned with my theory, as I expected that higher interpersonal trust would decrease moral uncertainty. 
+
+Additionally, there was no multicollinearity assumption violations. These findings acknowledge there is a non-linear relationship, violations of normality, and heteroskedicity based on the Shapiro and bp test. A robustness standard error check was used for further evaluation -- all standard errors, significant levels, and direction of coefficients remained stable when compared against the OLS model. The direction and significance levels also remained stable from the OLS and logistic regression.
