@@ -4,12 +4,12 @@ This repo contains files describing the data processing and analysis for the Mor
 
 Links:
 - Moral Uncertainty Model blog post
-
-- The R studio notebook attached (MoralUncertainty.Rmd)
-
-- Processed dataset: moral_compass_final.csv 
-
 - Original dataset: World Value Survey Dataset 7 
+
+
+The R studio notebook attached (MoralUncertainty.Rmd) contains
+
+- Processed dataset (moral_compass_final.csv) 
 
 - World Value Survey Codebook 
 
