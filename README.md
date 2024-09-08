@@ -11,7 +11,7 @@ The R studio notebook attached (MoralUncertainty.Rmd) contains
 
 - Processed dataset (moral_compass_final.csv) 
 
-- World Value Survey Codebook 
+- World Value Survey Codebook (F00010738-WVS-7_Master_Questionnaire_2017-2020_English.pdf)
 
 Notes: 
 Variable names:
