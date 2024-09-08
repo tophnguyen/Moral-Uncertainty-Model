@@ -3,15 +3,15 @@ Project Title: Moral Uncertainty Model
 This repo contains files describing the data processing and analysis for the Moral Uncertainty Model Project
 
 Links:
-Moral Uncertainty Model blog post
+- Moral Uncertainty Model blog post
 
-The R studio notebook attached (ccai_data_processing.ipynb)
+- The R studio notebook attached (ccai_data_processing.ipynb)
 
-Processed dataset: moral_compass_final.csv 
+- Processed dataset: moral_compass_final.csv 
 
-Original dataset: World Value Survey Dataset 7 
+- Original dataset: World Value Survey Dataset 7 
 
-World Value Survey Codebook 
+- World Value Survey Codebook 
 
 Notes: 
 Variable names:
