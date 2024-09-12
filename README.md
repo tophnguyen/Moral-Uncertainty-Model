@@ -6,7 +6,7 @@ The R studio notebook attached (MoralUncertainty.Rmd) contains
 - Processed dataset (moral_compass_final.csv)
 
 Links and resources
-- Moral Uncertainty Model [blog post](URL)
+- Moral Uncertainty Model [blog post](https://www.cnguyen.xyz/post/moral-uncertainty-model)
 - Original dataset: [World Value Survey Dataset 7](https://www.worldvaluessurvey.org/WVSDocumentationWV7.jsp)
 - World Value Survey Codebook (F00010738-WVS-7_Master_Questionnaire_2017-2020_English.pdf)
 
