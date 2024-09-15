@@ -13,7 +13,7 @@ Links and resources
 
 Notes: 
 Variable names:
-tt1 = Tech convienance 
+tt1 = Tech convenience
 tt2 = Tech future impact
 tt3 = Tech benefits
 tg1 = Confidence in Government
