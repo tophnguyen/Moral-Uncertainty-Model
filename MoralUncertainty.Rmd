@@ -798,3 +798,69 @@ DISCUSSION:
 The lm4 model as a whole accounted for 8% of the variance in moral uncertainty (R square = .08, F = 20.751, df = 10; 2401, p < .01). This indicates that there are many other factors that could predict moral uncertainty completely. The variables chosen tend to be broader in scope so 8% of explainable variance was not a surprise. For my H1: we reject the null hypothesis, there is some evidence to suggest a relationship between views on technology and moral uncertainty. There is -0.241 change per 1 unit increase in positive views in technology on moral uncertainty. This direction goes against my initial expectations which theorized high level of positive views of technology would increase moral uncertainty. H2: We fail to reject the null and say there is no relationship between confidence in government and moral uncertainty. This is to say there is no correlation between government and their influence on American's moral uncertainty. These results may indicate that social contract theory does not hold as an influential framework on morality in the 21st century. H3: We reject the null hypothesis and say there is some evidence to suggest a relationship between interpersonal trust (outgroup trust) and moral uncertainty. There is a -.336 change per 1 unit increase in interpersonal trust on moral uncertainty. These findings aligned with my theory, as I expected that higher interpersonal trust would decrease moral uncertainty. 
 
 Additionally, there was no multicollinearity assumption violations. These findings acknowledge there is a non-linear relationship, violations of normality, and heteroskedicity based on the Shapiro and bp test. A robustness standard error check was used for further evaluation -- all standard errors, significant levels, and direction of coefficients remained stable when compared against the OLS model. The direction and significance levels also remained stable from the OLS and logistic regression.
+
+
+Descriptive Data Results
+```{r}
+
+library(flextable)
+library(janitor)
+edu_tab <- moral %>%  
+  tabyl(Q275) %>% 
+  filter(n != 0) %>% 
+    mutate(percent = round(percent * 100, 1), 
+         percent = paste0(percent, "%"))  %>% 
+  mutate(Response = case_when(
+     is.na(Q275) ~ "No Response", 
+    Q275 == 0 ~ "Early childhood edu",     
+    Q275 == 1 ~ "Primary",    
+    Q275 == 2 ~ "LoIr secondary",           
+    Q275 == 3 ~ "Upper secondary",
+    Q275 == 4 ~ "Post-secondary",
+    Q275 == 5 ~ "Short-cycle tertiary",
+    Q275 == 6 ~ "Bachelors",
+    Q275 == 7 ~ "Masters",
+    Q275 == 8 ~ "Doctoral",
+    TRUE ~ as.character(Q275)          
+  )) %>% 
+  rename(Count = n, Percent = percent) %>% 
+ dplyr::select(-matches("valid_percent")) 
+
+e<-flextable(edu_tab) #Save the tibble as a flextable
+e
+
+age_avg<- moral %>% 
+  summarise(mean = mean(Q262, na.rm = TRUE),  # Exclude NA values
+            sd = sd(Q262, na.rm = TRUE),      # Exclude NA values
+            n = sum(!is.na(Q262))) %>%        # Count non-NA values
+  mutate(mean = round(mean, 1)) %>% 
+  mutate(sd = round(sd, 1))
+
+a<-flextable(age_avg)
+a
+
+#my sample consisted of (n=2,412) Americans with a mean age of 43.5 and majority educated (post-secondary = 25% and bachelors = 25%, masters = 11.8%, and doctoral = 5%)
+
+```
+
+```{r}
+social_tab <- moral %>%  
+  tabyl(Q207) %>% 
+  filter(n != 0) %>% 
+    mutate(percent = round(percent * 100, 1), 
+         percent = paste0(percent, "%"))  %>% 
+  mutate(Response = case_when(
+     is.na(Q207) ~ "No Response",
+    Q207 == 1 ~ "Daily",    
+    Q207 == 2 ~ "Weekly",           
+    Q207 == 3 ~ "Monthly",
+    Q207 == 4 ~ "Less than monthly",
+    Q207 == 5 ~ "Never",
+    TRUE ~ as.character(Q207)          
+  )) %>% 
+  rename(Count = n, Percent = percent) %>% 
+ dplyr::select(-matches("valid_percent"))
+ 
+s<-flextable(social_tab) #Save the tibble as a flextable
+s
+```
