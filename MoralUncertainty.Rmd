@@ -718,7 +718,7 @@ ggplot(tech_region, aes(x = factor(x, levels = 1:10), y = predicted)) +
 #based on the bar chart, as positive views on technology increases, moral uncertainty tends to decrease. 
 
 #bar chart of view on technology and moral uncertainty by education 
-tech_edu<-ggpredict(lm4, terms=c("Positive_tech [1,3,5,7,10]", "Social_media_usage [1,7]"))
+tech_edu<-ggpredict(lm4, terms=c("Positive_tech [1,3,5,7,10]", "Social_media_usage [1,5]"))
 footnote_tech_edu <- str_wrap("Note: Views on technological impact in regards to long term benefits to humanity in health, comfort, ease of life, and opportunites for future generations, social media usage set to daily and never", width = 70)
 
 ggplot(tech_edu, aes(x = factor(x, levels = 1:10), 
@@ -728,7 +728,7 @@ ggplot(tech_edu, aes(x = factor(x, levels = 1:10),
   geom_bar(stat = "identity", width = 0.7, position = position_dodge()) +
   scale_fill_manual(name = "Social Media Usage",
                     values = c("lightgrey", "black"),
-                    labels = c("1" = "Daily", "7" = "Never")) +  # Update legend labels
+                    labels = c("1" = "Daily", "5" = "Never")) +  # Update legend labels
   theme_minimal(base_size = 10) +
   labs(x = "Views on Technology",
        y = "Predicted Probability of Moral uncertainty", 
@@ -760,7 +760,7 @@ ggplot(inter_region, aes(x = factor(x, levels = 1:4), y = predicted)) +
                 position = position_dodge(width = 0.9))
 
 #bar chart predicting moral uncertainy and interpersonal trust by education
-tech_edu<-ggpredict(lm4, terms=c("Inter_trust [1:4, by=1]", "Social_media_usage [1,7]"))
+tech_edu<-ggpredict(lm4, terms=c("Inter_trust [1:4, by=1]", "Social_media_usage [1,5]"))
 footnote_inter_edu <- str_wrap("Note: Trust in strangers, people of another religion, and nationality, social media usage set to daily and never", width = 70)
 
 ggplot(tech_edu, aes(x = factor(x, levels = 1:10), 
@@ -770,7 +770,7 @@ ggplot(tech_edu, aes(x = factor(x, levels = 1:10),
   geom_bar(stat = "identity", width = 0.7, position = position_dodge()) +
   scale_fill_manual(name = "Social Media Usage",
                     values = c("lightgrey", "black"),
-                    labels = c("1" = "Daily", "7" = "Never")) +  # Update legend labels
+                    labels = c("1" = "Daily", "5" = "Never")) +  # Update legend labels
   theme_minimal(base_size = 10) +
   labs(x = "Interpersonal Trust (Outgroup)",
        y = "Predicted Probability of Moral uncertainty", 
